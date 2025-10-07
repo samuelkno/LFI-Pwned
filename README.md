@@ -40,7 +40,7 @@ lfi-lab/
 # Riesgos de seguridad (leer primero)
 
 * Este repositorio **contiene vulnerabilidades intencionales**.
-* **NO** subir `web/` a un hosting compartido o público (Banahosting, cPanel, etc.). Puedes ser suspendido o comprometer otros sitios.
+* **NO** subir `web/` a un hosting compartido o público. Puedes ser suspendido o comprometer otros sitios.
 * Usa el laboratorio **solo** en una máquina local aislada o en una VM dedicada (NAT, sin puertos abiertos al público).
 * Antes de ejecutar, asegúrate de entender que los archivos son deliberadamente inseguros.
 
@@ -59,8 +59,8 @@ lfi-lab/
 1. Clona el repositorio:
 
 ```bash
-git clone https://github.com/tu-usuario/lfi-lab.git
-cd lfi-lab
+git clone https://github.com/tu-usuario/lfi-pwned.git
+cd lfi-pwned
 ```
 
 2. Levanta el contenedor:
@@ -249,18 +249,6 @@ docker-compose down
 * Ejecuta cada sesión en VM local por estudiante o grupo (por ejemplo, cada grupo en su propia VM con Docker).
 * No compartas el laboratorio en un hosting público sin **aislamiento extremo** (firewall, autenticación, acceso limitado).
 * Considera usar versiones “simuladas” (no vulnerables) para demostración pública y mantener la versión vulnerable solo en entornos cerrados.
-
----
-
-# Contribuciones y ajustes
-
-* Si quieres:
-
-  * Añadir formatos por usuario (progress por estudiante).
-  * Registrar intentos en un log (IP, payload).
-  * Integrar con un sistema de autenticación para clases.
-  * Añadir más wrappers o retos (zip, compress.bzip2, phar con stub malicioso).
-* Abre un *issue* o PR con tu propuesta.
 
 ---
 
