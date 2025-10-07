@@ -1,5 +1,5 @@
 <?php
-// Nivel 1 - LFI básico (modificado para registrar progreso)
+// Nivel 1 - LFI básico (modificado para registrar progreso y avisar si no existe el recurso)
 // WARNING: intentionally vulnerable - do not expose publicly
 
 $default = 'languages/es.php';
@@ -13,21 +13,63 @@ if (trim($to_include) === '') {
     $to_include = $default;
 }
 
-// Usamos @ to suppress warnings for the lab (so students see the output)
-ob_start();
-@include($to_include);
-$content = ob_get_clean();
+// --- Determinar si el recurso existe (varias comprobaciones) ---
+// Si es un wrapper (contiene '://') lo tratamos como recurso especial y no comprobamos con file_exists
+$is_wrapper = (strpos($to_include, '://') !== false);
+$found_path = false;
+$path_to_include = $to_include;
 
+if ($is_wrapper) {
+    // si es wrapper (php://, data:, phar://, etc.) asumimos intento de recurso y permitimos la inclusión
+    $found_path = true;
+    $path_to_include = $to_include; // incluir tal cual
+} else {
+    // candidatos a comprobar (en este orden)
+    $candidates = array(
+        $to_include,
+        __DIR__ . '/' . $to_include,
+        __DIR__ . '/languages/' . $to_include,
+        // si el usuario puso 'es' o 'en' sin .php, también probar con .php
+        $to_include . '.php',
+        __DIR__ . '/' . $to_include . '.php',
+        __DIR__ . '/languages/' . $to_include . '.php',
+    );
+
+    foreach ($candidates as $c) {
+        if (@file_exists($c)) {
+            $found_path = true;
+            $path_to_include = $c;
+            break;
+        }
+    }
+}
+
+// Usamos @ to suppress warnings for the lab (so students see the output)
+// Solo intentamos incluir si encontramos el recurso (o si es wrapper)
+$content = '';
+$not_found_message = '';
+if ($found_path) {
+    ob_start();
+    @include($path_to_include);
+    $content = ob_get_clean();
+    // Si la inclusión produjo salida vacía y el archivo existe pero está vacío, lo consideramos "sin salida"
+    // eso ya se muestra en $content (vacio). No lo tratamos como "no existe".
+} else {
+    // No se encontró ninguna ruta candidata válida
+    $not_found_message = "El valor que colocaste no existe o no se encontró el recurso solicitado.";
+}
+
+// --- mark_progress function (igual que antes) ---
 function mark_progress($level) {
     $pfile = __DIR__ . '/../progress.json';
     $prog = array();
     if (file_exists($pfile)) {
-        $raw = file_get_contents($pfile);
-        $decoded = json_decode($raw, true);
+        $raw = @file_get_contents($pfile);
+        $decoded = @json_decode($raw, true);
         if (is_array($decoded)) $prog = $decoded;
     }
     $prog[$level] = true;
-    file_put_contents($pfile, json_encode($prog, JSON_PRETTY_PRINT));
+    @file_put_contents($pfile, json_encode($prog, JSON_PRETTY_PRINT));
 }
 
 ?>
@@ -57,6 +99,13 @@ function mark_progress($level) {
 
       <hr>
       <h3>Salida (preformatada):</h3>
+
+      <?php if ($not_found_message !== ''): ?>
+        <div style="color:#fff;background:#6b1f1f;padding:10px;border-radius:6px;margin-bottom:10px">
+          <?php echo htmlspecialchars($not_found_message); ?>
+        </div>
+      <?php endif; ?>
+
       <pre><?php echo htmlspecialchars($content); ?></pre>
 
       <?php
